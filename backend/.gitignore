@@ -1,0 +1,7 @@
+node_modules
+logs
+.DS_Store
+**/.vscode/settings.json
+.env
+.eslintrc.cjs
+.vscode
