@@ -8,7 +8,7 @@ import { asyncLocalStorage } from '../../services/als.service.js'
 import Pokedex from 'pokedex-promise-v2'
 const P = new Pokedex()
 
-const PAGE_SIZE = 10
+const PAGE_SIZE = 5
 
 export const pokemonService = {
   remove,
@@ -27,6 +27,9 @@ async function query(filterBy = { region: '' }) {
       return pokemon.pokemon_species.name
     })
 
+    const startIdx = filterBy.pageIdx ? filterBy.pageIdx * PAGE_SIZE : 0
+    pokemonsNames = pokemonsNames.slice(startIdx, startIdx + PAGE_SIZE)
+
     const pokemon_species = await P.getPokemonSpeciesByName(pokemonsNames)
     const pokemonEntries = pokemon_species.map((pokemon) => pokemon.pokedex_numbers[0].entry_number)
 
@@ -39,10 +42,6 @@ async function query(filterBy = { region: '' }) {
         types: pokemon.types.map((type) => type.type.name)
       }
     })
-
-    // Handle pagination
-    const startIdx = filterBy.pageIdx ? filterBy.pageIdx * PAGE_SIZE : 0
-    pokemons = pokemons.slice(startIdx, startIdx + PAGE_SIZE)
 
     return pokemons
   } catch (err) {

@@ -1,6 +1,6 @@
 import { pokemonService } from '../services/pokemon'
 import { store } from './store'
-import { ADD_POKEMON, REMOVE_POKEMON, SET_POKEMONS, SET_POKEMON, UPDATE_POKEMON, ADD_POKEMON_MSG } from './pokemon.reducer'
+import { ADD_POKEMON, REMOVE_POKEMON, SET_POKEMONS, SET_POKEMON, UPDATE_POKEMON, ADD_POKEMON_MSG, SET_FILTER_BY } from './pokemon.reducer'
 
 export async function loadPokemons(filterBy) {
   try {
@@ -63,6 +63,13 @@ export async function addPokemonMsg(pokemonId, txt) {
     console.log('Cannot add pokemon msg', err)
     throw err
   }
+}
+
+export function setFilterBy(filterBy) {
+  store.dispatch({
+    type: SET_FILTER_BY,
+    filterBy
+  })
 }
 
 // Command Creators:
