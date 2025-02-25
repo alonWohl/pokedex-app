@@ -7,7 +7,6 @@ import cookieParser from 'cookie-parser'
 import { authRoutes } from './api/auth/auth.routes.js'
 import { userRoutes } from './api/user/user.routes.js'
 import { pokemonRoutes } from './api/pokemon/pokemon.routes.js'
-import { setupSocketAPI } from './services/socket.service.js'
 
 import { setupAsyncLocalStorage } from './middlewares/setupAls.middleware.js'
 
@@ -33,8 +32,6 @@ app.all('*', setupAsyncLocalStorage)
 app.use('/api/auth', authRoutes)
 app.use('/api/user', userRoutes)
 app.use('/api/pokemon', pokemonRoutes)
-
-setupSocketAPI(server)
 
 app.get('/secret', (req, res) => {
   if (process.env.SECRET_STR) {

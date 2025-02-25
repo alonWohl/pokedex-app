@@ -9,20 +9,15 @@ function getEmptyPokemon() {
 
 function getDefaultFilter() {
   return {
-    region: 'kanto',
-    pageIdx: 0
+    region: '',
+    pageIdx: 0,
+    limit: 10
   }
 }
 function getFilterFromSearchParams(searchParams) {
   const region = searchParams.get('region') || ''
-  const type = searchParams.get('type') || ''
-  const generation = searchParams.get('generation') || ''
-  const legendary = searchParams.get('legendary') || ''
   return {
-    region,
-    type,
-    generation,
-    legendary
+    region
   }
 }
 

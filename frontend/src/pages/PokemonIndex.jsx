@@ -1,23 +1,27 @@
 import { useEffect, useState, useRef } from 'react'
-import { pokemonService } from '../services/pokemon'
+
 import { PokemonList } from '../cmps/PokemonList'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Outlet, useNavigate, useSearchParams } from 'react-router-dom'
 import { svgs } from '../services/Svgs.service'
 import { useSelector } from 'react-redux'
 import { setFilterBy } from '../store/pokemon.actions'
+import { usePokemonsInfinite } from '../customHooks/usePokemonsInfinite'
+
 export function PokemonIndex() {
-  const [pokemons, setPokemons] = useState([])
   const [searchParams, setSearchParams] = useSearchParams()
 
   const filterBy = useSelector((storeState) => storeState.pokemonModule.filterBy)
 
-  const [hasMore, setHasMore] = useState(true)
   const elementRef = useRef(null)
   const navigate = useNavigate()
 
+  const { data, isLoading, isError, fetchNextPage, isFetchingNextPage, hasNextPage } = usePokemonsInfinite({ filterBy })
+
+  const pokemons = data?.pages.flat() || []
+
   useEffect(() => {
     const observer = new IntersectionObserver(onIntersection, {
-      rootMargin: '5px',
+      rootMargin: '200px',
       threshold: 1
     })
     if (observer && elementRef.current) {
@@ -28,31 +32,12 @@ export function PokemonIndex() {
         observer.disconnect()
       }
     }
-  }, [filterBy])
-
-  useEffect(() => {
-    setPokemons([])
-  }, [filterBy.region])
+  }, [pokemons])
 
   function onIntersection(entries) {
     const firstEntry = entries[0]
-    if (firstEntry.isIntersecting && hasMore) {
-      loadPokemons(filterBy)
-    }
-  }
-
-  async function loadPokemons(filterBy) {
-    try {
-      const pokemons = await pokemonService.query(filterBy)
-      if (pokemons.length === 0) {
-        setHasMore(false)
-      } else {
-        setPokemons((prevPokemons) => [...prevPokemons, ...pokemons])
-        setFilterBy({ ...filterBy, pageIdx: filterBy.pageIdx + 1 })
-        setSearchParams(filterBy)
-      }
-    } catch (err) {
-      console.log('Error loading pokemons:', err)
+    if (firstEntry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage()
     }
   }
 
@@ -60,27 +45,29 @@ export function PokemonIndex() {
   //   const field = target.name
   //   const value = target.value
 
-  //   setFilterBy((prevFilterBy) => ({ ...prevFilterBy, [field]: value }))
+  //   setFilterBy({ ...filterBy, [field]: value })
   // }
 
-  if (!pokemons) return <div>Loading...</div>
-
+  if (isLoading && !pokemons.length) return <div>Loading...</div>
+  if (isError) return <div>Error loading Pokémon. Please try again.</div>
   return (
-    <div className="flex flex-col justify-center items-center">
-      {/* <select name="region" onChange={handleChangeRegion} value={filterBy.region}>
-        <option value="kanto">Kanto</option>
-        <option value="original-johto">Johto</option>
-        <option value="hoenn">Hoenn</option>
-      </select> */}
-      <div className="flex justify-between items-center w-full">
-        <button className="w-20 h-20 flex items-center justify-center" onClick={() => navigate('/')}>
+    <div className="flex h-screen flex-col items-center relative bg-white p-4 pt-0 overflow-hidden">
+      <div className="absolute -top-22 -right-17 flex items-center justify-center z-10">
+        {svgs.pokeball({ className: 'fill-neutral-100', width: 250, height: 250 })}
+      </div>
+
+      <div className="flex justify-between items-center w-full relative z-20">
+        <button className="flex items-center justify-start" onClick={() => navigate('/')}>
           {svgs.back()}
         </button>
-        <button className="w-20 h-20 flex items-center justify-center" onClick={() => navigate('/')}>
+        <button className="flex items-center justify-end cursor-pointer" onClick={() => navigate('/pokemon/filter')}>
           {svgs.more()}
         </button>
       </div>
-      <PokemonList pokemons={pokemons} hasMore={hasMore} elementRef={elementRef} />
+
+      <h1 className="text-4xl self-start font-semibold tracking-wide text-zinc-800 relative z-20">Pokedex</h1>
+
+      <PokemonList pokemons={pokemons} hasMore={hasNextPage} elementRef={elementRef} isLoading={isFetchingNextPage} />
     </div>
   )
 }

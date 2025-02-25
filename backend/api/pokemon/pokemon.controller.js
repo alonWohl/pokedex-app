@@ -13,9 +13,9 @@ export async function getPokemons(req, res) {
 
     const filterBy = {
       region: req.query.region,
-      pageIdx: req.query.pageIdx
+      pageIdx: req.query.pageIdx || undefined,
+      limit: req.query.limit || undefined
     }
-    console.log('🚀 ~ getPokemons ~ filterBy:', filterBy)
 
     const pokemons = await pokemonService.query(filterBy)
     res.json(pokemons)
