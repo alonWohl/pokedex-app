@@ -21,75 +21,42 @@ export const pokemonService = {
   removePokemonMsg
 }
 
-async function query(filterBy = { region: '', pageIdx: 0, limit: PAGE_SIZE }) {
+async function query(filterBy = { generation: '', pageIdx: 0, limit: PAGE_SIZE }) {
   try {
     let pokemons = []
 
     if (filterBy.generation) {
-      // try {
-      //   let generationData = generationCache.get(filterBy.generation)
-      //   if (!generationData) {
-      //     generationData = await P.getGenerationByName(filterBy.generation)
-      //     generationCache.set(filterBy.generation, generationData)
-      //   }
-      //   const uniqueSpecies = Array.from(new Set(allSpecies.map((s) => s.name))).map((name) => allSpecies.find((s) => s.name === name))
-      //   // Apply pagination
-      //   const startIdx = filterBy.pageIdx * filterBy.limit
-      //   const endIdx = Math.min(startIdx + filterBy.limit, uniqueSpecies.length)
-      //   if (startIdx >= uniqueSpecies.length) {
-      //     return [] // No more data
-      //   }
-      //   const pageSpecies = uniqueSpecies.slice(startIdx, endIdx)
-      //   // Get Pokemon details in parallel
-      //   const pokemonPromises = pageSpecies.map(async (species) => {
-      //     try {
-      //       // Get the default Pokemon form for this species
-      //       const speciesDetail = await P.resource(species.url)
-      //       const defaultVariety = speciesDetail.varieties.find((v) => v.is_default) || speciesDetail.varieties[0]
-      //       const pokemon = await P.resource(defaultVariety.pokemon.url)
-      //       return {
-      //         name: pokemon.name,
-      //         id: pokemon.id,
-      //         imageUrl: pokemon.sprites.other['official-artwork'].front_default || pokemon.sprites.front_default,
-      //         types: pokemon.types.map((type) => type.type.name) || []
-      //       }
-      //     } catch (err) {
-      //       logger.error(`Error fetching details for ${species.name}`, err)
-      //       return null
-      //     }
-      //   })
-      //   // Wait for all promises to resolve
-      //   const results = await Promise.all(pokemonPromises)
-      //   // Filter out any null results from errors
-      //   pokemons = results.filter((pokemon) => pokemon !== null)
-      // } catch (err) {
-      //   logger.error(`Error in generation filter`, err)
-      //   return []
-      // }
-    } else {
-      try {
-        const pokemonsList = await P.getPokemonsList({ offset: filterBy.pageIdx * filterBy.limit, limit: filterBy.limit })
-        let pokemonsNames = pokemonsList.results.map((pokemon) => pokemon.name)
-        let pokemonsIds = await P.getPokemonByName(pokemonsNames)
-        pokemonsIds = pokemonsIds.map((pokemon) => pokemon.id)
+      console.log('Fetching generation:', filterBy.generation)
+      const generationPokedex = await P.getGenerationByName(filterBy.generation)
 
-        pokemons = await P.getPokemonByName(pokemonsIds)
-        pokemons = pokemons.map((pokemon) => {
-          return {
-            name: pokemon.name,
-            id: pokemon.id,
-            imageUrl: pokemon.sprites.other['official-artwork'].front_default || pokemon.sprites.front_default,
-            types: pokemon.types.map((type) => type.type.name) || []
-          }
-        })
-      } catch (err) {
-        logger.error('cannot find pokemons', err)
-        throw err
-      }
+      const pokemonsUrls = generationPokedex.pokemon_species.map((pokemon) => {
+        const id = pokemon.url.split('/').filter(Boolean).pop()
+        return `https://pokeapi.co/api/v2/pokemon/${id}/`
+      })
+
+      const urlsToFetch = filterBy.limit ? pokemonsUrls.slice(0, filterBy.limit) : pokemonsUrls
+
+      console.log(`Fetching ${urlsToFetch.length} pokemon details`)
+      pokemons = await P.getResource(urlsToFetch)
+      pokemons.sort((a, b) => a.id - b.id)
+    } else {
+      console.log(`Fetching page ${filterBy.pageIdx}, limit ${filterBy.limit}`)
+      const pokemonsList = await P.getPokemonsList({
+        offset: filterBy.pageIdx * filterBy.limit,
+        limit: filterBy.limit
+      })
+
+      pokemons = await P.getResource(pokemonsList.results.map((pokemon) => pokemon.url))
     }
-    return pokemons
+
+    return pokemons.map((pokemon) => ({
+      name: pokemon.name,
+      id: pokemon.id,
+      imageUrl: pokemon.sprites.other['official-artwork'].front_default || pokemon.sprites.front_default,
+      types: pokemon.types?.map((type) => type.type.name) || []
+    }))
   } catch (err) {
-    logger.error('cannot find pokemons', err)
+    logger.error('Failed to get pokemons', err)
     throw err
   }
 }

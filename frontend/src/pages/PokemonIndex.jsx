@@ -20,6 +20,12 @@ export function PokemonIndex() {
   const pokemons = data?.pages.flat() || []
 
   useEffect(() => {
+    setSearchParams(filterBy)
+  }, [filterBy])
+
+  useEffect(() => {
+    if (filterBy.generation) return
+
     const observer = new IntersectionObserver(onIntersection, {
       rootMargin: '200px',
       threshold: 1
@@ -32,7 +38,7 @@ export function PokemonIndex() {
         observer.disconnect()
       }
     }
-  }, [pokemons])
+  }, [pokemons, filterBy.generation])
 
   function onIntersection(entries) {
     const firstEntry = entries[0]

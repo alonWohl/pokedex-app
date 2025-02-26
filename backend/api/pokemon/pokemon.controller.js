@@ -13,6 +13,7 @@ export async function getPokemons(req, res) {
 
     const filterBy = {
       region: req.query.region,
+      generation: req.query.generation,
       pageIdx: req.query.pageIdx || undefined,
       limit: req.query.limit || undefined
     }
