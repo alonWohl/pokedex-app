@@ -42,25 +42,39 @@ export function PokemonFilter() {
     navigate('/pokemon')
   }
 
+  function clearFilter() {
+    const newFilterBy = {
+      ...filterBy,
+      generation: '',
+      pageIdx: 0
+    }
+    setFilterBy(newFilterBy)
+    navigate('/pokemon')
+  }
+
   return (
-    <div className="flex flex-col h-screen bg-white p-4">
-      <div className="flex justify-between items-center w-full">
-        <button className="flex items-center justify-start" onClick={handleBack}>
+    <div className="flex flex-col h-screen bg-white p-4 text-zinc-800">
+      <div className="flex justify-between items-center w-full  text-3xl text-zinc-700">
+        <button className="flex items-center justify-center" onClick={handleBack}>
           {svgs.back()}
+        </button>
+
+        <button className="flex items-center justify-center" onClick={() => clearFilter()}>
+          {svgs.clear()}
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4 mt-4">
         {generations.map((generation) => (
           <div
             key={generation.id}
-            className={`flex flex-col items-center justify-center cursor-pointer gap-2 rounded-md shadow-md border border-gray-200 md:flex-row ${
+            className={`flex flex-col items-center justify-center cursor-pointer p-2 gap-2 rounded-md shadow-md border border-gray-200 md:flex-row ${
               filterBy.generation === generation.id ? 'bg-gray-200' : ''
             }`}
             onClick={() => handleFilterBy(generation.id)}>
-            <h1 className="text-sm font-bold">{generation.name}</h1>
+            <h1 className="text-sm font-bold flex-1 text-center md:flex-none md:text-left">{generation.name}</h1>
             <div className="flex items-center justify-center w-40">
-              <img src={generation.img} alt={generation.name} className="mix-blend-multiply w-full h-full object-cover" />
+              <img src={generation.img} alt={generation.name} className="mix-blend-multiply max-w-30 max-h-30 object-cover" />
             </div>
           </div>
         ))}
