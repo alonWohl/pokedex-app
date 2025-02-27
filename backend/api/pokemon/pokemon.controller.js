@@ -37,6 +37,17 @@ export async function getPokemonById(req, res) {
   }
 }
 
+export async function getPokemonEvolution(req, res) {
+  try {
+    const pokemonId = req.params.id
+    const evolutionChain = await pokemonService.getEvolutionChain(pokemonId)
+    res.json(evolutionChain)
+  } catch (err) {
+    logger.error('Failed to get pokemon evolution', err)
+    res.status(400).send({ err: 'Failed to get pokemon evolution' })
+  }
+}
+
 export async function addPokemon(req, res) {
   const { loggedinUser, body: pokemon } = req
 

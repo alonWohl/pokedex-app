@@ -5,7 +5,8 @@ export const pokemonService = {
   getById,
   save,
   remove,
-  addPokemonMsg
+  addPokemonMsg,
+  getEvolutionChain
 }
 
 async function query(filterBy = { region: '' }) {
@@ -18,6 +19,10 @@ function getById(pokemonId) {
 
 async function remove(pokemonId) {
   return httpService.delete(`pokemon/${pokemonId}`)
+}
+
+function getEvolutionChain(pokemonId) {
+  return httpService.get(`pokemon/${pokemonId}/evolution`)
 }
 
 async function save(pokemon) {

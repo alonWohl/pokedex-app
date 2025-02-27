@@ -3,7 +3,16 @@ import express from 'express'
 import { requireAuth } from '../../middlewares/requireAuth.middleware.js'
 import { log } from '../../middlewares/logger.middleware.js'
 
-import { getPokemons, getPokemonById, addPokemon, updatePokemon, removePokemon, addPokemonMsg, removePokemonMsg } from './pokemon.controller.js'
+import {
+  getPokemons,
+  getPokemonById,
+  getPokemonEvolution,
+  addPokemon,
+  updatePokemon,
+  removePokemon,
+  addPokemonMsg,
+  removePokemonMsg
+} from './pokemon.controller.js'
 
 const router = express.Router()
 
@@ -12,6 +21,7 @@ const router = express.Router()
 
 router.get('/', log, getPokemons)
 router.get('/:id', log, getPokemonById)
+router.get('/:id/evolution', log, getPokemonEvolution)
 router.post('/', log, requireAuth, addPokemon)
 router.put('/:id', requireAuth, updatePokemon)
 router.delete('/:id', requireAuth, removePokemon)

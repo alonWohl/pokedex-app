@@ -2,11 +2,13 @@ import { useNavigate } from 'react-router-dom'
 import { svgs } from '../services/Svgs.service'
 import { useSelector, useDispatch } from 'react-redux'
 import { setFilterBy } from '../store/pokemon.actions'
+import { usePrefetchGeneration } from '../customHooks/UsePokemonHooks'
 
 export function PokemonFilter() {
   const navigate = useNavigate()
-  const dispatch = useDispatch()
+
   const filterBy = useSelector((store) => store.pokemonModule.filterBy)
+  const prefetchGeneration = usePrefetchGeneration()
 
   const generations = [
     { id: 'generation-i', name: 'Generation I', img: '../../src/assets/1.jpeg' },
@@ -54,25 +56,27 @@ export function PokemonFilter() {
 
   return (
     <div className="flex flex-col h-screen bg-white p-4 text-zinc-800">
-      <div className="flex justify-between items-center w-full  text-3xl text-zinc-700">
-        <button className="flex items-center justify-center" onClick={handleBack}>
-          {svgs.back()}
+      <div className="flex justify-between items-center w-full text-zinc-700  ">
+        <button className="flex items-center justify-center cursor-pointer" onClick={handleBack}>
+          {svgs.back({ className: 'w-8 h-8' })}
         </button>
 
-        <button className="flex items-center justify-center" onClick={() => clearFilter()}>
-          {svgs.clear()}
+        <button className="flex items-center justify-center cursor-pointer" onClick={() => clearFilter()}>
+          {svgs.clear({ className: 'w-8 h-8' })}
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mt-4">
+      <div className="grid grid-cols-2 gap-4 m-auto mt-32 w-full h-[60%]">
         {generations.map((generation) => (
           <div
             key={generation.id}
-            className={`flex flex-col items-center justify-center cursor-pointer p-2 gap-2 rounded-md shadow-md border border-gray-200 md:flex-row ${
+            className={`flex flex-col items-center justify-center cursor-pointer p-2 gap-2 rounded-lg shadow-md border border-gray-200 md:flex-row ${
               filterBy.generation === generation.id ? 'bg-gray-200' : ''
             }`}
-            onClick={() => handleFilterBy(generation.id)}>
-            <h1 className="text-sm font-bold flex-1 text-center md:flex-none md:text-left">{generation.name}</h1>
+            onClick={() => handleFilterBy(generation.id)}
+            onMouseEnter={() => prefetchGeneration(generation.id)}
+            onTouchStart={() => prefetchGeneration(generation.id)}>
+            <h1 className="text-sm font-bold  text-center md:flex-none md:text-left">{generation.name}</h1>
             <div className="flex items-center justify-center w-40">
               <img src={generation.img} alt={generation.name} className="mix-blend-multiply max-w-30 max-h-30 object-cover" />
             </div>

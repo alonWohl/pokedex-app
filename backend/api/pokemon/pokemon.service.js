@@ -18,7 +18,8 @@ export const pokemonService = {
   add,
   update,
   addPokemonMsg,
-  removePokemonMsg
+  removePokemonMsg,
+  getEvolutionChain
 }
 
 async function query(filterBy = { generation: '', pageIdx: 0, limit: PAGE_SIZE }) {
@@ -60,52 +61,89 @@ async function query(filterBy = { generation: '', pageIdx: 0, limit: PAGE_SIZE }
     throw err
   }
 }
-// async function query(filterBy = { region: '' }) {
-//   try {
-//     let regionalPokedex = await P.getPokedexByName(filterBy.region)
-//     let pokemonsNames = regionalPokedex.pokemon_entries.map((pokemon) => {
-//       return pokemon.pokemon_species.name
-//     })
-
-//     const startIdx = filterBy.pageIdx ? filterBy.pageIdx * PAGE_SIZE : 0
-//     pokemonsNames = pokemonsNames.slice(startIdx, startIdx + PAGE_SIZE)
-
-//     const pokemon_species = await P.getPokemonSpeciesByName(pokemonsNames)
-//     const pokemonEntries = pokemon_species.map((pokemon) => pokemon.pokedex_numbers[0].entry_number)
-
-//     let pokemons = await P.getPokemonByName(pokemonEntries)
-//     pokemons = pokemons.map((pokemon) => {
-//       return {
-//         name: pokemon.name,
-//         id: pokemon.id,
-//         imageUrl: pokemon.sprites.other['official-artwork'].front_default,
-//         types: pokemon.types.map((type) => type.type.name)
-//       }
-//     })
-
-//     return pokemons
-//   } catch (err) {
-//     logger.error('cannot find pokemons', err)
-//     throw err
-//   }
-// }
 
 async function getById(pokemonId) {
   try {
     let pokemon = await P.getPokemonByName(pokemonId)
-    pokemon = pokemon.map((pokemon) => {
-      return {
-        name: pokemon.name,
-        id: pokemon.id,
-        imageUrl: pokemon.sprites.other['official-artwork'].front_default || '',
-        types: pokemon.types.map((type) => type.type.name) || []
-      }
-    })
+
+    pokemon = {
+      name: pokemon.name,
+      id: pokemon.id,
+      imageUrl: pokemon.sprites.other['official-artwork'].front_default || '',
+      types: pokemon.types.map((type) => type.type.name) || [],
+      weight: pokemon.weight
+    }
+
     return pokemon
   } catch (err) {
     logger.error(`while finding pokemon ${pokemonId}`, err)
     throw err
   }
+}
+
+async function getEvolutionChain(pokemonId) {
+  try {
+    const pokemon = await P.getPokemonSpeciesByName(pokemonId)
+    let evolutionChain = await P.getResource(pokemon.evolution_chain.url)
+
+    evolutionChain = [
+      {
+        name: evolutionChain.chain.species.name,
+        url: evolutionChain.chain.species.url,
+        evolvesTo: evolutionChain.chain.evolves_to.map((evolution) => {
+          return {
+            name: evolution.species.name,
+            atLevel: evolution.evolution_details[0].min_level,
+            url: evolution.species.url,
+            evolvesTo: evolution.evolves_to.map((evolution) => {
+              return {
+                name: evolution.species.name,
+                atLevel: evolution.evolution_details[0].min_level,
+                url: evolution.species.url
+              }
+            })
+          }
+        })
+      }
+    ]
+
+    return getEvolutionImages(evolutionChain)
+  } catch (err) {
+    logger.error(`while finding pokemon ${pokemonId}`, err)
+    throw err
+  }
+}
+
+async function getEvolutionImages(evolutionChain) {
+  async function flattenEvolutions(pokemon) {
+    let pokemons = [pokemon]
+    if (pokemon.evolvesTo) {
+      for (const evolution of pokemon.evolvesTo) {
+        pokemons = pokemons.concat(await flattenEvolutions(evolution))
+      }
+    }
+    return pokemons
+  }
+
+  const allPokemons = []
+  for (const baseForm of evolutionChain) {
+    const evolutionList = await flattenEvolutions(baseForm)
+
+    // Get Pokemon data for each evolution
+    const pokemonDataPromises = evolutionList.map(async (pokemon) => {
+      const id = pokemon.url.split('/').filter(Boolean).pop()
+      const pokemonData = await P.getPokemonByName(id)
+      return {
+        name: pokemon.name,
+        imageUrl: pokemonData.sprites.other['official-artwork'].front_default || pokemonData.sprites.front_default,
+        atLevel: pokemon.atLevel
+      }
+    })
+
+    allPokemons.push(...(await Promise.all(pokemonDataPromises)))
+  }
+
+  return allPokemons
 }
 
 async function remove(pokemonId) {
