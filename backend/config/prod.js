@@ -1,5 +1,5 @@
 export default {
-  dbURL: process.env.MONGO_URL || 'mongodb+srv://alonw1010:simba1010@pokedex.ong1o.mongodb.net/?retryWrites=true&w=majority&appName=Pokedex',
+  dbURL: process.env.MONGO_URL,
   dbName: process.env.DB_NAME || 'pokedex_db'
 }
 
