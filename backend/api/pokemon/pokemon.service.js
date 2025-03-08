@@ -22,7 +22,7 @@ export const pokemonService = {
   getEvolutionChain
 }
 
-async function query(filterBy = { generation: '', pageIdx: 0, limit: PAGE_SIZE }) {
+async function query(filterBy = { generation: '', pageIdx: undefined, limit: PAGE_SIZE }) {
   try {
     let pokemons = []
 
@@ -43,8 +43,8 @@ async function query(filterBy = { generation: '', pageIdx: 0, limit: PAGE_SIZE }
     } else {
       console.log(`Fetching page ${filterBy.pageIdx}, limit ${filterBy.limit}`)
       const pokemonsList = await P.getPokemonsList({
-        offset: filterBy.pageIdx * filterBy.limit,
-        limit: filterBy.limit
+        offset: filterBy?.pageIdx * filterBy?.limit,
+        limit: filterBy?.limit
       })
 
       pokemons = await P.getResource(pokemonsList.results.map((pokemon) => pokemon.url))

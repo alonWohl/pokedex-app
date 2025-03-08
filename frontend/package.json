@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:host": "vite --host",
     "dev:local": "set VITE_LOCAL=true && vite",
     "dev:local:mac": "export VITE_LOCAL=true && vite",
     "build": "vite build",
